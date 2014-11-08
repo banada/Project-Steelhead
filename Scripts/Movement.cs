@@ -9,6 +9,7 @@ public class Movement : MonoBehaviour {
 	Transform bottom;
 	Transform top;
 	Vector2 dive_vector;
+	Vector2 slide_vector;
 	//float to_ground;
 
 	void Awake() {
@@ -40,8 +41,12 @@ public class Movement : MonoBehaviour {
 	}
 
 	// Lateral slide
-	public void slide(float slide_force) {
-		rigidbody2D.AddForce(new Vector2(slide_force, 0f));
+	public float slide(float slide_force) {
+		slide_vector = new Vector2(slide_force, 0);
+		float slide_start = rigidbody2D.position.x;
+		rigidbody2D.MovePosition(rigidbody2D.position + slide_vector*Time.deltaTime);
+		float slide_delta = slide_vector.x - slide_start;
+		return slide_delta;
 	}
 
 	// Downward dive

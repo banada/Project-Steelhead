@@ -7,9 +7,11 @@ public class ProtagonistControl : MonoBehaviour {
 
 	[SerializeField] float move_speed = 10f;
 	[SerializeField] float jump_force = 1000f;
-	[SerializeField] float slide_force = 30f;
+	[SerializeField] float slide_force = 50f;
 	[SerializeField] float dive_force_x = 30f;
 	[SerializeField] float dive_force_y = -40f;
+	[SerializeField] float slide_limit = 1000f;
+	[SerializeField] float slide_wait = 5f; 
 	float gnd_chk_radius = 0.1f;
 	
 	private Movement movement;
@@ -17,6 +19,8 @@ public class ProtagonistControl : MonoBehaviour {
 	// Lock player movement when diving, etc.
 	private bool is_locked = false;
 	private bool is_diving = false;
+	private bool slide_ready = true;
+	private float slide_dist = 0f;
 
 	void Awake() {
 		movement = GetComponent<Movement>();
@@ -34,8 +38,16 @@ public class ProtagonistControl : MonoBehaviour {
 		}
 		if (Input.GetButton("Ctrl")) {
 			if (!is_locked) {
+				// Slide if we're on the ground
 				if (movement.is_grounded(gnd_chk_radius)) {
-					movement.slide(slide_force);
+					if ((slide_dist < slide_limit) && (slide_ready)) {
+						slide_dist += movement.slide(slide_force);
+					// if we just finished sliding, start cooldown
+					} else if (slide_dist >= slide_limit) {
+						StartCoroutine(slide_cooldown());
+						slide_dist = 0f;
+					}
+				// Dive if we're in the air
 				} else {
 						movement.dive(dive_force_x, dive_force_y);
 						is_locked = true;
@@ -63,5 +75,11 @@ public class ProtagonistControl : MonoBehaviour {
 		if (!is_locked) {
 			movement.move(axis, move_speed);
 		}
+	}
+
+	IEnumerator slide_cooldown() {
+		slide_ready = false;
+		yield return new WaitForSeconds(slide_wait);
+		slide_ready = true;
 	}
 }
